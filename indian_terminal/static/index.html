@@ -3,106 +3,446 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Indian TradingAgents Terminal</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f59e0b'/%3E%3Cpath d='M6 22l6-8 5 5 9-11' stroke='%23111' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Upstox Pro &mdash; Indian Trading Terminal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%235367ff'/%3E%3Cpath d='M7 21l6-8 5 5 8-10' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div id="mock-banner" class="mock-banner" hidden>MOCK DATA &mdash; fictional prices for development. Not market data.</div>
 
+<!-- Top Global Navigation Bar -->
 <header class="topbar">
-  <div class="brand"><span class="logo">TA</span><span class="brand-name">Terminal <em>India</em></span></div>
-  <div id="index-strip" class="index-strip" aria-label="Indices"></div>
+  <div class="brand">
+    <span class="logo">UP</span>
+    <span class="brand-name">Upstox <em>Pro</em></span>
+  </div>
+
+  <nav class="main-nav" aria-label="Global navigation">
+    <button class="nav-item active" data-nav="home">Home</button>
+    <button class="nav-item" data-nav="watchlist">My List</button>
+    <button class="nav-item" data-nav="trading">Trading Desk</button>
+    <button class="nav-item" data-nav="orders">Orders &amp; Positions</button>
+    <button class="nav-item" data-nav="chain">Option Chain</button>
+    <button class="nav-item" data-nav="strategy">Strategy Builder</button>
+  </nav>
+
+  <div id="index-strip" class="index-strip" aria-label="Indices live ticker"></div>
+
   <div class="spacer"></div>
-  <div id="market-pill" class="pill pill-closed" title="">&hellip;</div>
-  <div id="funds-mini" class="funds-mini"></div>
+
+  <div class="search-top-wrap">
+    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="global-search" type="search" placeholder="Search stocks, options, F&amp;O (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Global search">
+    <div id="global-search-results" class="search-results top-search-results" hidden></div>
+  </div>
+
+  <div id="market-pill" class="pill pill-closed" title="NSE Market Status">&hellip;</div>
+  <div id="funds-mini" class="funds-mini" title="Paper Trading Available Margin"></div>
   <button id="connect-btn" class="btn ghost small" hidden>Connect Upstox</button>
-  <button id="theme-btn" class="btn ghost small" title="Toggle light / dark theme" aria-label="Toggle light or dark theme"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></button>
+  <button id="theme-btn" class="btn ghost small" title="Toggle light / dark theme" aria-label="Toggle theme">
+    <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg>
+  </button>
+  <div class="user-avatar" title="Paper Account"><span>KN</span></div>
 </header>
 
 <div id="notice" class="notice" hidden></div>
 
-<main class="layout">
-  <aside class="panel watch" aria-label="Watchlist">
-    <div class="search-wrap">
-      <input id="search" type="search" placeholder="Search RELIANCE, NIFTY, TCS&hellip;" autocomplete="off" spellcheck="false" aria-label="Search symbols">
-      <div id="search-results" class="search-results" hidden></div>
-    </div>
-    <div id="list-tabs" class="list-tabs"></div>
-    <div id="watchlist" class="watchlist" role="list"></div>
-  </aside>
+<!-- VIEW CONTAINER -->
+<div id="view-container" class="view-container">
 
-  <section class="center">
-    <div class="tabs main-tabs" role="tablist">
-      <button class="tab active" data-view="chart" role="tab">Chart</button>
-      <button class="tab" data-view="chain" role="tab">Option chain</button>
+  <!-- ===================== VIEW 1: HOME (DISCOVERY) ===================== -->
+  <div id="page-home" class="page-view active">
+    <!-- Discovery Sub-Navigation -->
+    <div class="sub-nav">
+      <button class="sub-item active" data-sub="ideas">Ideas</button>
+      <button class="sub-item" data-sub="stocks">Stocks</button>
+      <button class="sub-item" data-sub="options">Options</button>
+      <button class="sub-item" data-sub="futures">Futures</button>
+      <button class="sub-item" data-sub="commodities">Commodities</button>
     </div>
 
-    <div id="view-chart" class="view">
-      <div class="inst-head">
-        <div>
-          <div id="inst-symbol" class="inst-symbol">&mdash;</div>
-          <div id="inst-name" class="inst-name"></div>
+    <!-- SUB-TAB 1: IDEAS -->
+    <section id="subtab-ideas" class="subtab-content active">
+      <!-- 1. Trending Stocks -->
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">Trending stocks</h2>
+            <span class="sec-subtitle muted small">Live market movers and volume leaders</span>
+          </div>
+          <div class="filter-pills" id="trending-pills">
+            <button class="pill-btn active" data-cat="most_bought">Most Bought</button>
+            <button class="pill-btn" data-cat="top_gainers">Top Gainers</button>
+            <button class="pill-btn" data-cat="top_losers">Top Losers</button>
+            <button class="pill-btn" data-cat="trading_under_500">Trading under 500</button>
+          </div>
         </div>
-        <div class="inst-price">
-          <div id="inst-ltp" class="ltp">&mdash;</div>
-          <div id="inst-change" class="chg"></div>
-          <div id="inst-frozen" class="frozen-tag" hidden></div>
-        </div>
-        <div class="inst-actions">
-          <button id="buy-btn" class="btn buy">Buy</button>
-          <button id="sell-btn" class="btn sell">Sell</button>
-          <button id="ai-btn" class="btn ai">AI analysis</button>
-        </div>
-      </div>
-      <div class="tf-row" id="tf-row">
-        <button data-tf="1m">1m</button><button data-tf="5m">5m</button><button data-tf="15m">15m</button>
-        <button data-tf="1h">1h</button><button data-tf="1D" class="active">1D</button><button data-tf="1W">1W</button>
-        <span id="ohlc" class="ohlc"></span>
-      </div>
-      <div class="chart-grid">
-        <div id="chart" class="chart" aria-label="Price chart"></div>
-        <div class="depth" aria-label="Market depth">
-          <div class="depth-title">Market depth</div>
-          <table id="depth-table"></table>
-          <div id="depth-note" class="depth-note"></div>
-          <dl id="quote-stats" class="stats"></dl>
+
+        <div id="trending-cards" class="cards-grid"></div>
+
+        <div class="pagination-bar" id="trending-pagination">
+          <span class="page-info muted small" id="trending-page-info">Page 1 of 110</span>
+          <div class="page-btns">
+            <button class="pg-btn prev" id="pg-prev">&lsaquo; Prev</button>
+            <button class="pg-btn active" data-page="1">1</button>
+            <button class="pg-btn" data-page="2">2</button>
+            <button class="pg-btn" data-page="3">3</button>
+            <span class="muted">&hellip;</span>
+            <button class="pg-btn next" id="pg-next">Next &rsaquo;</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="view-chain" class="view" hidden>
-      <div class="chain-controls">
-        <label>Underlying
-          <select id="chain-under"><option>NIFTY</option><option>BANKNIFTY</option><option>FINNIFTY</option><option>MIDCPNIFTY</option><option>SENSEX</option></select>
-        </label>
-        <label>Expiry <select id="chain-expiry"></select></label>
-        <div id="chain-summary" class="chain-summary"></div>
+      <!-- 2. Trending Options & Real-Time OI Analysis Chart -->
+      <div class="grid-2col">
+        <!-- Trending Options -->
+        <div class="sec-card">
+          <div class="sec-head">
+            <div class="sec-title-wrap">
+              <h2 class="sec-title">Trending options</h2>
+              <span class="sec-subtitle muted small">High volume derivative contracts</span>
+            </div>
+            <div class="row-controls">
+              <select id="to-underlying" class="mini-select"><option>NIFTY 50</option><option>BANK NIFTY</option></select>
+              <div class="seg-pills" id="to-cp"><button class="active" data-v="CE">Call</button><button data-v="PE">Put</button></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="upstox-table" id="table-trending-options">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- OI Analysis Bar Chart -->
+        <div class="sec-card">
+          <div class="sec-head">
+            <div class="sec-title-wrap">
+              <h2 class="sec-title">OI analysis</h2>
+              <span class="sec-subtitle muted small">Call vs Put Open Interest across Strikes</span>
+            </div>
+            <div class="chart-badges">
+              <span class="badge-tag" id="oi-pcr">PCR: 0.992</span>
+              <span class="badge-tag spot" id="oi-spot">Spot: 24,986.40</span>
+            </div>
+          </div>
+          <div class="oi-chart-wrap" id="oi-chart-container">
+            <div class="chart-legend">
+              <span class="leg-item"><span class="dot red"></span> Call OI</span>
+              <span class="leg-item"><span class="dot blue"></span> Put OI</span>
+              <span class="leg-item"><span class="dot spot"></span> ATM Spot</span>
+            </div>
+            <svg id="oi-svg-chart" viewBox="0 0 540 220" preserveAspectRatio="none" class="oi-svg"></svg>
+          </div>
+        </div>
       </div>
-      <div class="chain-scroll"><table id="chain-table" class="chain"></table></div>
-      <div id="chain-note" class="muted small"></div>
+
+      <!-- 3. Quick Action Feature Pills -->
+      <div class="quick-pills-row">
+        <button class="action-pill" data-action="ipo"><span class="icon">&#128176;</span> IPO</button>
+        <button class="action-pill" data-action="discovery"><span class="icon">&#128269;</span> Discovery</button>
+        <button class="action-pill" data-action="basket"><span class="icon">&#128722;</span> Basket</button>
+        <button class="action-pill" data-action="gtt"><span class="icon">&#9874;</span> GTT Orders</button>
+        <button class="action-pill" data-action="alerts"><span class="icon">&#128276;</span> Alerts</button>
+        <button class="action-pill highlight" data-action="chain"><span class="icon">&#9776;</span> Option Chain</button>
+        <button class="action-pill highlight" data-action="strategy"><span class="icon">&#9881;</span> Strategy Builder</button>
+        <button class="action-pill" data-action="oi"><span class="icon">&#128202;</span> OI Analysis</button>
+        <button class="action-pill" data-action="commodities"><span class="icon">&#9878;</span> Commodities</button>
+        <button class="action-pill" data-action="mtf"><span class="icon">&#128179;</span> MTF</button>
+      </div>
+
+      <!-- 4. High-Performing Trade Ideas -->
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">High-performing ideas</h2>
+            <span class="sec-subtitle muted small">Curated momentum &amp; swing setups</span>
+          </div>
+        </div>
+        <div id="ideas-grid" class="ideas-grid"></div>
+      </div>
+
+      <!-- 5. Quick Option Chain Index Cards & IPO Hub -->
+      <div class="grid-2col">
+        <div class="sec-card">
+          <div class="sec-head">
+            <h2 class="sec-title">Option chain indices</h2>
+            <button class="btn-link" data-nav="chain">View all &rsaquo;</button>
+          </div>
+          <div id="oc-indices-grid" class="cards-grid mini"></div>
+        </div>
+
+        <div class="sec-card">
+          <div class="sec-head">
+            <h2 class="sec-title">IPO Hub</h2>
+            <div class="seg-pills"><button class="active">Open (2)</button><button>Upcoming (1)</button></div>
+          </div>
+          <div id="ipo-grid" class="ipo-grid"></div>
+        </div>
+      </div>
+
+      <!-- 6. Buzzing Stocks & Momentum Gainers -->
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">Buzzing stocks</h2>
+            <span class="sec-subtitle muted small">High volume breakouts &amp; fresh 52-week highs</span>
+          </div>
+        </div>
+        <div id="buzzing-grid" class="buzzing-grid"></div>
+      </div>
+    </section>
+
+    <!-- SUB-TAB 2: STOCKS -->
+    <section id="subtab-stocks" class="subtab-content">
+      <!-- Sector Performance Heatmap -->
+      <div class="sec-card">
+        <div class="sec-head">
+          <h2 class="sec-title">Sector performance heatmap</h2>
+          <span class="sec-subtitle muted small">Real-time sectoral gains &amp; losses</span>
+        </div>
+        <div id="sector-heatmap" class="heatmap-grid"></div>
+      </div>
+
+      <!-- Volume Shockers & 52-Week High Breakouts -->
+      <div class="grid-2col">
+        <div class="sec-card">
+          <div class="sec-head"><h2 class="sec-title">Volume shockers</h2></div>
+          <div class="table-wrap">
+            <table class="upstox-table" id="table-volume-shockers">
+              <thead><tr><th>Symbol</th><th class="r">Volume Surge</th><th class="r">LTP</th><th class="r">Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec-card">
+          <div class="sec-head"><h2 class="sec-title">52-Week high breakouts</h2></div>
+          <div class="table-wrap">
+            <table class="upstox-table" id="table-52w-high">
+              <thead><tr><th>Symbol</th><th class="r">52W High</th><th class="r">LTP</th><th class="r">Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUB-TAB 3: OPTIONS -->
+    <section id="subtab-options" class="subtab-content">
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">Derivatives dashboard</h2>
+            <span class="sec-subtitle muted small">Most active contracts, PCR sentiment &amp; strike ladder</span>
+          </div>
+          <button class="btn buy" data-nav="chain">Open Full Option Chain</button>
+        </div>
+        <div class="grid-2col">
+          <div class="table-wrap">
+            <h3 class="table-subhead up">Most active calls (CE)</h3>
+            <table class="upstox-table" id="table-active-calls">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI</th><th class="r">IV</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <h3 class="table-subhead down">Most active puts (PE)</h3>
+            <table class="upstox-table" id="table-active-puts">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI</th><th class="r">IV</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUB-TAB 4: FUTURES -->
+    <section id="subtab-futures" class="subtab-content">
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">Futures buildup analysis</h2>
+            <span class="sec-subtitle muted small">Open Interest vs Price trajectory classification</span>
+          </div>
+        </div>
+        <div class="grid-2col">
+          <div class="table-wrap">
+            <h3 class="table-subhead up">Long Buildup (Bullish: Price &uarr;, OI &uarr;)</h3>
+            <table class="upstox-table" id="table-long-buildup">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <h3 class="table-subhead down">Short Buildup (Bearish: Price &darr;, OI &uarr;)</h3>
+            <table class="upstox-table" id="table-short-buildup">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <h3 class="table-subhead up">Short Covering (Reversal: Price &uarr;, OI &darr;)</h3>
+            <table class="upstox-table" id="table-short-covering">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <h3 class="table-subhead down">Long Unwinding (Profit Booking: Price &darr;, OI &darr;)</h3>
+            <table class="upstox-table" id="table-long-unwinding">
+              <thead><tr><th>Contract</th><th class="r">LTP</th><th class="r">Change</th><th class="r">OI Change</th><th class="r">Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUB-TAB 5: COMMODITIES -->
+    <section id="subtab-commodities" class="subtab-content">
+      <div class="sec-card">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">MCX Commodities Live</h2>
+            <span class="sec-subtitle muted small">Bullion, Energy, and Base Metals</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="upstox-table" id="table-commodities">
+            <thead><tr><th>Commodity</th><th>Expiry</th><th>Lot / Unit</th><th class="r">LTP</th><th class="r">Change</th><th class="r">Volume</th><th class="r">Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== VIEW 2: TRADING DESK & CHARTS ===================== -->
+  <div id="page-trading" class="page-view">
+    <div class="layout">
+      <!-- Left Watchlist -->
+      <aside class="panel watch" aria-label="Watchlist">
+        <div class="search-wrap">
+          <input id="search" type="search" placeholder="Search RELIANCE, NIFTY, TCS&hellip;" autocomplete="off" spellcheck="false" aria-label="Search symbols">
+          <div id="search-results" class="search-results" hidden></div>
+        </div>
+        <div id="list-tabs" class="list-tabs"></div>
+        <div id="watchlist" class="watchlist" role="list"></div>
+      </aside>
+
+      <!-- Center Chart Workspace -->
+      <section class="center">
+        <div class="tabs main-tabs" role="tablist">
+          <button class="tab active" data-view="chart" role="tab">TradingView Chart</button>
+          <button class="tab" data-view="chain" role="tab">Option Chain</button>
+        </div>
+
+        <div id="view-chart" class="view">
+          <div class="inst-head">
+            <div>
+              <div id="inst-symbol" class="inst-symbol">&mdash;</div>
+              <div id="inst-name" class="inst-name"></div>
+            </div>
+            <div class="inst-price">
+              <div id="inst-ltp" class="ltp">&mdash;</div>
+              <div id="inst-change" class="chg"></div>
+              <div id="inst-frozen" class="frozen-tag" hidden></div>
+            </div>
+            <div class="inst-actions">
+              <button id="buy-btn" class="btn buy">Buy</button>
+              <button id="sell-btn" class="btn sell">Sell</button>
+              <button id="ai-btn" class="btn ai">AI Analysis Desk</button>
+            </div>
+          </div>
+          <div class="tf-row" id="tf-row">
+            <button data-tf="1m">1m</button><button data-tf="5m">5m</button><button data-tf="15m">15m</button>
+            <button data-tf="1h">1h</button><button data-tf="1D" class="active">1D</button><button data-tf="1W">1W</button>
+            <span id="ohlc" class="ohlc"></span>
+          </div>
+          <div class="chart-grid">
+            <div id="chart" class="chart" aria-label="Price chart"></div>
+            <div class="depth" aria-label="Market depth">
+              <div class="depth-title">Level 2 Market Depth</div>
+              <table id="depth-table"></table>
+              <div id="depth-note" class="depth-note"></div>
+              <dl id="quote-stats" class="stats"></dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Interactive Option Chain in Workspace -->
+        <div id="view-chain" class="view" hidden>
+          <div class="chain-controls">
+            <label>Underlying
+              <select id="chain-under"><option>NIFTY</option><option>BANKNIFTY</option><option>FINNIFTY</option><option>MIDCPNIFTY</option><option>SENSEX</option></select>
+            </label>
+            <label>Expiry <select id="chain-expiry"></select></label>
+            <div id="chain-summary" class="chain-summary"></div>
+          </div>
+          <div class="chain-scroll"><table id="chain-table" class="chain"></table></div>
+          <div id="chain-note" class="muted small"></div>
+        </div>
+      </section>
+
+      <!-- Bottom Orders & Positions Dock -->
+      <section class="panel book" aria-label="Orders and positions">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-book="positions">Positions <b id="n-pos"></b></button>
+          <button class="tab" data-book="holdings">Holdings <b id="n-hold"></b></button>
+          <button class="tab" data-book="orders">Orders <b id="n-ord"></b></button>
+          <button class="tab" data-book="trades">Trades</button>
+          <button class="tab" data-book="funds">Funds</button>
+        </div>
+        <div id="book-body" class="book-body"></div>
+      </section>
     </div>
-  </section>
+  </div>
 
-  <section class="panel book" aria-label="Orders and positions">
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-book="positions">Positions <b id="n-pos"></b></button>
-      <button class="tab" data-book="holdings">Holdings <b id="n-hold"></b></button>
-      <button class="tab" data-book="orders">Orders <b id="n-ord"></b></button>
-      <button class="tab" data-book="trades">Trades</button>
-      <button class="tab" data-book="funds">Funds</button>
+  <!-- ===================== VIEW 3: STRATEGY BUILDER ===================== -->
+  <div id="page-strategy" class="page-view">
+    <div class="sec-card">
+      <div class="sec-head">
+        <div class="sec-title-wrap">
+          <h2 class="sec-title">Option Strategy Builder &amp; Payoff Analyzer</h2>
+          <span class="sec-subtitle muted small">Construct multi-leg spreads, calculate Max Profit, Max Loss &amp; Breakevens</span>
+        </div>
+        <div class="row-controls">
+          <select id="strat-under" class="mini-select"><option>NIFTY</option><option>BANKNIFTY</option></select>
+          <select id="strat-preset" class="mini-select">
+            <option value="bull_call">Bull Call Spread</option>
+            <option value="bear_put">Bear Put Spread</option>
+            <option value="iron_condor">Iron Condor</option>
+            <option value="straddle">Long Straddle</option>
+          </select>
+        </div>
+      </div>
+      <div class="strat-workspace">
+        <div class="strat-legs" id="strat-legs-container">
+          <h3 class="table-subhead">Strategy Legs</h3>
+          <div id="strat-legs-list" class="legs-list"></div>
+          <button class="btn ghost small wide" id="add-leg-btn">+ Add Custom Leg</button>
+        </div>
+        <div class="strat-payoff">
+          <h3 class="table-subhead">Payoff Diagram at Expiry</h3>
+          <div class="payoff-stats" id="payoff-stats">
+            <div><span class="muted small">Max Profit:</span> <b class="up" id="sp-profit">₹6,850</b></div>
+            <div><span class="muted small">Max Loss:</span> <b class="down" id="sp-loss">₹3,150</b></div>
+            <div><span class="muted small">Breakeven:</span> <b id="sp-be">25,042</b></div>
+            <div><span class="muted small">Risk:Reward:</span> <b id="sp-rr">1 : 2.17</b></div>
+          </div>
+          <div class="payoff-svg-wrap">
+            <svg id="payoff-svg" viewBox="0 0 600 240" preserveAspectRatio="none" class="payoff-svg"></svg>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="book-body" class="book-body"></div>
-  </section>
-</main>
+  </div>
 
-<footer class="foot">
-  Paper trading only &mdash; no real orders are placed. Charges and margins are approximations.
-  Charts by <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener" target="_blank">TradingView Lightweight Charts</a>.
-  Prices: Upstox &middot; Fundamentals: Screener.in &middot; Agents: TauricResearch/TradingAgents.
-</footer>
+</div>
 
-<!-- Order ticket -->
+<!-- Order Ticket Dialog -->
 <dialog id="ticket" class="ticket">
   <form method="dialog" id="ticket-form" autocomplete="off">
     <div class="ticket-head" id="ticket-head">
@@ -129,12 +469,12 @@
   </form>
 </dialog>
 
-<!-- AI desk drawer -->
+<!-- AI Desk Drawer (12-Agent Analysis Pipeline) -->
 <aside id="ai-drawer" class="drawer" aria-label="AI analysis" hidden>
   <div class="drawer-head">
-    <div><b>AI desk</b> <span id="ai-title" class="muted"></span></div>
+    <div><b>AI Research Desk</b> <span id="ai-title" class="muted"></span></div>
     <div class="drawer-actions">
-      <a id="ai-download" class="btn small" href="#" hidden>Download full report (.html)</a>
+      <a id="ai-download" class="btn small" href="#" hidden>Download Report (.html)</a>
       <button id="ai-close" class="x" aria-label="Close">&times;</button>
     </div>
   </div>
@@ -142,6 +482,10 @@
 </aside>
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<footer class="foot">
+  Upstox Pro Paper Terminal &mdash; Simulated execution. Prices: Upstox &middot; Fundamentals: Screener.in &middot; AI Agents: TauricResearch/TradingAgents.
+</footer>
 
 <script src="/static/vendor/lightweight-charts.standalone.production.js"></script>
 <script src="/static/app.js"></script>

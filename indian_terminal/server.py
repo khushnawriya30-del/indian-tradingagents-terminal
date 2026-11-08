@@ -42,7 +42,7 @@ from tradingagents.dataflows.vendors.india.instruments import (
 )
 from tradingagents.default_config import india_config
 
-from . import mock_feed, options
+from . import discovery, mock_feed, options
 from .analysis import AnalysisManager
 from .paper import OrderRejected, PaperAccount
 from .quotes import QuoteService
@@ -384,6 +384,31 @@ def create_app(mock: bool | None = None, data_dir: str | os.PathLike | None = No
         _save_token(data, token)
         return HTMLResponse("<h3>Upstox connected.</h3><p>You can close this tab and return to the terminal.</p>"
                             "<script>setTimeout(()=>location.href='/',1200)</script>")
+
+    # ---------------------------------------------------------------- discovery
+    @app.get("/api/discovery/all")
+    def discovery_all():
+        return discovery.get_discovery_all(master=master, quotes_snap=quotes.snapshot())
+
+    @app.get("/api/discovery/ideas")
+    def discovery_ideas():
+        return discovery.get_ideas_feed()
+
+    @app.get("/api/discovery/stocks")
+    def discovery_stocks():
+        return discovery.get_stocks_feed()
+
+    @app.get("/api/discovery/options")
+    def discovery_options():
+        return discovery.get_options_feed()
+
+    @app.get("/api/discovery/futures")
+    def discovery_futures():
+        return discovery.get_futures_feed()
+
+    @app.get("/api/discovery/commodities")
+    def discovery_commodities():
+        return discovery.get_commodities_feed()
 
     # ------------------------------------------------------------------ static
     @app.get("/", response_class=HTMLResponse)
