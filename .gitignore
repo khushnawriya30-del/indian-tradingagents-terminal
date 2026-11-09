@@ -227,3 +227,18 @@ reports/
 .env.*.local
 upstox_token.json
 paper_state.json
+
+# --- Next.js web app ---
+web/node_modules/
+web/.next/
+web/out/
+web/.turbo/
+web/*.tsbuildinfo
+web/data/paper_state.json
+web/data/paper-state.json
+web/data/quote-cache.json
+web/data/reports/
+web/data/logos.json
+
+# --- runtime caches ---
+.tradingagents-cache/

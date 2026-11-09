@@ -1,63 +1,74 @@
-"""Community / retail sentiment inputs for Indian tickers.
+"""Indian retail sentiment: Dalal Street communities, cashtags and headlines.
 
-The upstream sentiment analyst reads StockTwits cashtags and US subreddits, neither of
-which says anything useful about an NSE stock. For ``.NS`` / ``.BO`` symbols and the
-Indian indices this module supplies:
+The US sentiment stack reads r/wallstreetbets and StockTwits. Indian retail
+concentrates in a smaller set of forums, so the sources are re-pointed while the
+analytical rules stay identical:
 
-* Indian communities on Reddit: r/IndianStockMarket, r/IndiaInvestments,
-  r/DalalStreetTalks, r/StockMarketIndia, searched by the bare NSE symbol
-  (``RELIANCE``, not ``RELIANCE.NS``).
-* A "Dalal Street chatter" block built from headlines about brokerage calls, targets,
-  FII/DII activity and market mood. These are news headlines. They are not forum
-  posts, carry no Bullish/Bearish tags, and the block says so, because Moneycontrol's
-  forum has no public feed and nothing is scraped from behind a login.
+* Reddit: r/IndianStreetBets, r/DalalStreetTalks, r/IndiaInvestments
+* StockTwits: ``$RELIANCE`` and ``$RELIANCE.NS`` cashtags still carry Indian names
+* News headlines: the Indian wires (see ``news.py``)
+
+Fetchers degrade to an explicit ``<unavailable>`` marker; a throttled feed is
+never reported as silence.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+import logging
 
-from tradingagents.dataflows.date_window import in_window
-from tradingagents.dataflows.errors import VendorUnavailableError
-from tradingagents.dataflows.vendors.india import news as india_news
-from tradingagents.dataflows.vendors.india.instruments import INDEX_KEYS, InstrumentMaster
+from tradingagents.dataflows.date_window import coverage_gap
+from tradingagents.dataflows.vendors.india.instruments import nse_symbol
+from tradingagents.dataflows.vendors.india.news import fetch_company_news
+from tradingagents.dataflows.vendors.reddit import fetch_reddit_posts
+from tradingagents.dataflows.vendors.stocktwits import fetch_stocktwits_messages
 
-INDIA_SUBREDDITS = ("IndianStockMarket", "IndiaInvestments", "DalalStreetTalks", "StockMarketIndia")
+logger = logging.getLogger(__name__)
 
-CHATTER_NOTE = (
-    "NOTE: StockTwits is not used for Indian listings (its cashtag stream is US-centric). "
-    "This block holds Dalal Street headlines on brokerage calls, targets, FII/DII flows and "
-    "market mood. They are news headlines, not forum posts: there are no user Bullish/Bearish "
-    "tags, so ignore the Bullish/Bearish ratio guidance for this source and weigh it as "
-    "institutional / broker framing."
+INDIAN_SUBREDDITS = (
+    "IndianStreetBets",
+    "DalalStreetTalks",
+    "IndiaInvestments",
+    "IndianStockMarket",
 )
 
 
-def is_indian_ticker(ticker: str) -> bool:
-    text = (ticker or "").strip().upper()
-    return text.endswith((".NS", ".BO")) or text.replace(" ", "") in INDEX_KEYS
+def fetch_sentiment_bundle(ticker: str, start_date: str, end_date: str, screen=None) -> dict:
+    """All three sentiment sources for one Indian ticker, ready for the prompt."""
+    symbol = nse_symbol(ticker)
 
-
-def reddit_query(ticker: str) -> str:
-    """The bare symbol Indian communities actually write (``TCS``, not ``TCS.NS``)."""
-    base, _ = InstrumentMaster.split_symbol(ticker)
-    return base
-
-
-def fetch_dalal_street_chatter(ticker: str, start_date: str, end_date: str, limit: int = 15) -> str:
-    """Prompt-ready block of Dalal Street headlines for ``ticker`` in the window."""
-    base = reddit_query(ticker)
-    topic = '("brokerage" OR "target price" OR "FII" OR "DII" OR "Dalal Street" OR "buy" OR "sell" OR "outlook")'
-    query = india_news._window_query(f'"{base}" {topic}', start_date, end_date)
+    reddit_block = fetch_reddit_posts(
+        symbol,
+        INDIAN_SUBREDDITS,
+        start_date=start_date,
+        end_date=end_date,
+        screen=screen,
+    )
+    stocktwits_block = fetch_stocktwits_messages(
+        symbol,
+        limit=30,
+        start_date=start_date,
+        end_date=end_date,
+        screen=screen,
+    )
     try:
-        items = india_news._dedupe(india_news._fetch(query))
-    except VendorUnavailableError as exc:
-        return f"<Dalal Street headlines unavailable: {exc}>"
-    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-    items = [i for i in items if in_window(i["pub_date"], start_dt, end_dt)]
-    items.sort(key=lambda i: i["pub_date"] or datetime.min, reverse=True)
-    items = items[:limit]
-    if not items:
-        return f"{CHATTER_NOTE}\n\n<no Dalal Street headlines about {base} in {start_date}..{end_date}>"
-    return f"{CHATTER_NOTE}\n\n{india_news._format(items)}"
+        articles = fetch_company_news(ticker, limit=20)
+    except Exception as exc:
+        logger.info("Indian headline block unavailable for %s: %s", symbol, exc)
+        articles = []
+    headline_lines = [
+        f"- {article.title} ({article.source})" for article in articles
+    ]
+    news_block = "\n".join(headline_lines) if headline_lines else "<unavailable: Indian wires returned no headlines>"
+    gap = coverage_gap(
+        [a.published for a in articles], start_date, end_date, "Indian wires", symbol
+    )
+    if gap:
+        news_block = f"{gap}\n{news_block}"
+
+    return {
+        "ticker": symbol,
+        "subreddits": INDIAN_SUBREDDITS,
+        "news_block": news_block,
+        "stocktwits_block": stocktwits_block,
+        "reddit_block": reddit_block,
+    }
